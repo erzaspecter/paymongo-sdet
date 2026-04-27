@@ -46,12 +46,13 @@ jobs:
       - name: Verify test files exist (generated or pre-existing)
         run: |
           echo "=== API Tests ==="
-          ls -la generated_test/tests/api/*.spec.ts || ls -la tests/api/*.spec.ts
-          echo "=== E2E Tests ==="
-          ls -la generated_test/tests/web/*.spec.ts || ls -la tests/web/*.spec.ts
+          ls -la generated_test/tests/api/*.spec.ts
 
-          API_COUNT=$(find . -path "*/tests/api/*.spec.ts" 2>/dev/null | wc -l)
-          E2E_COUNT=$(find . -path "*/tests/web/*.spec.ts" 2>/dev/null | wc -l)
+          echo "=== E2E Tests ==="
+          ls -la generated_test/tests/web/*.spec.ts
+
+          API_COUNT=$(find . -path "*/generated_test/tests/api/*.spec.ts" 2>/dev/null | wc -l)
+          E2E_COUNT=$(find . -path "*/generated_test/tests/web/*.spec.ts" 2>/dev/null | wc -l)
 
           if [ "$API_COUNT" -eq 0 ]; then
             echo "ERROR: No API tests found!"
@@ -67,9 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: generated-tests
-          path: |
-            tests/
-            generated_test/tests/
+          path: generated_test/tests/
           retention-days: 7
 
   # ── Job 2: Run API Tests ──────────────────────────────────────────────────
@@ -81,6 +80,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Start Go API server
+        run: |
+          go run main.go &
+          sleep 5
+          curl -f http://localhost:8080/api/health && echo "✅ Go API server is running" || exit 1
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -94,25 +104,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Start Go API server
-        run: |
-          # Install Go
-          sudo apt-get install -y golang-go || true
-          # Try to start backend if go files exist
-          if [ -f "main.go" ]; then
-            go run main.go &
-            sleep 3
-            echo "Go API server started"
-          else
-            echo "No main.go found — skipping backend start"
-            echo "Tests will run against STAGING_API_URL"
-          fi
-
       - name: Run API tests
         env:
           TEST_ENV: staging
-          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
-          STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+          STAGING_API_URL: http://localhost:8080
+          STAGING_BASE_URL: http://localhost:3000
         run: npm run test:api
 
       - name: Upload API test results
