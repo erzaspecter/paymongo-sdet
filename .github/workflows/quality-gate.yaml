@@ -89,8 +89,13 @@ jobs:
       - name: Start Go API server
         run: |
           go run main.go &
-          sleep 5
-          curl -f http://localhost:8080/api/health && echo "✅ Go API server is running" || exit 1
+          echo "Waiting for server to be ready..."
+          for i in {1..15}; do
+            curl -sf http://localhost:8080/api/health && echo "✅ Go API server is running" && break
+            echo "Attempt $i/15 - not ready yet, waiting 2s..."
+            sleep 2
+          done
+          curl -f http://localhost:8080/api/health || (echo "❌ Server failed to start" && exit 1)
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
