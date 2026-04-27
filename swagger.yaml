@@ -1,0 +1,170 @@
+basePath: /
+definitions:
+  main.CardRequest:
+    properties:
+      cardNumber:
+        example: "4242424242424242"
+        type: string
+    type: object
+  main.CardResponse:
+    properties:
+      message:
+        example: Card number is valid
+        type: string
+      valid:
+        example: true
+        type: boolean
+    type: object
+  main.EmailRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    type: object
+  main.EmailResponse:
+    properties:
+      message:
+        example: Email is valid
+        type: string
+      valid:
+        example: true
+        type: boolean
+    type: object
+  main.ErrorResponse:
+    properties:
+      error:
+        example: Internal server error
+        type: string
+    type: object
+  main.HealthResponse:
+    properties:
+      message:
+        example: Server is running
+        type: string
+      status:
+        example: healthy
+        type: string
+    type: object
+  main.PaymentRequest:
+    properties:
+      amount:
+        example: 50
+        type: number
+      cardNumber:
+        example: 4242 4242 4242 4242
+        type: string
+      cvv:
+        example: "123"
+        type: string
+      expiry:
+        example: 12/26
+        type: string
+    type: object
+  main.PaymentResponse:
+    properties:
+      message:
+        example: Payment processed successfully!
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A simple payment processing API with validation endpoints
+  title: Payment API
+  version: "1.0"
+paths:
+  /api/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Process a payment with card details (mock implementation)
+      parameters:
+      - description: Payment details
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/main.PaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.PaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Process payment checkout
+      tags:
+      - payment
+  /api/health:
+    get:
+      description: Returns the health status of the API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /api/validate-card:
+    post:
+      consumes:
+      - application/json
+      description: Validates credit card number using Luhn algorithm
+      parameters:
+      - description: Card number to validate
+        in: body
+        name: card
+        required: true
+        schema:
+          $ref: '#/definitions/main.CardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Validate card number
+      tags:
+      - validation
+  /api/validate-email:
+    post:
+      consumes:
+      - application/json
+      description: Validates email address format
+      parameters:
+      - description: Email to validate
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/main.EmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.EmailResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Validate email address
+      tags:
+      - validation
+swagger: "2.0"
