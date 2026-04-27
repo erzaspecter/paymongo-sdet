@@ -1,8 +1,6 @@
 node_modules/
 .env
 .generation_cache/
-generated_test/tests/api/*.spec.ts
-generated_test/tests/web/*.spec.ts
 test-results/
 playwright-report/
 playwright/.cache/
